@@ -10,13 +10,6 @@ import sqlite3
 from datetime import datetime, timedelta
 from typing import Optional
 
-try:
-    from TikTokLive import TikTokLiveClient
-    TIKTOK_AVAILABLE = True
-except ImportError:
-    TIKTOK_AVAILABLE = False
-    print("⚠️ TikTokLive non installé — pip install TikTokLive")
-
 COLOR_MAIN    = 0x0D2137
 COLOR_SUCCESS = 0x1565A8
 COLOR_DANGER  = 0xA63228
@@ -31,8 +24,6 @@ COLOR_OFFLINE = 0x5F5E5A
 
 BOT_NAME   = "DLM Bot"
 BOT_FOOTER = "DLM Corporation • Système de Gestion"
-
-PREMIUM_SKU_ID = 1485778915887677591
 
 POLL_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 
@@ -54,7 +45,7 @@ def init_system():
     if not os.path.exists('config.json'):
         with open('config.json', 'w') as f:
             json.dump({
-                "token": "VOTRE_TOKEN_ICI",
+                "token": "000000000000000000",
                 "prefix": "/",
                 "twitch_client_id": "",
                 "twitch_client_secret": ""
@@ -233,7 +224,7 @@ async def check_is_staff(interaction: discord.Interaction):
             pass
     if not interaction.response.is_done():
         embed = discord.Embed(
-            title="🔒 Accès Refusé",
+            title="🔒Accès Refusé🔒",
             description="Vous ne possédez pas les permissions nécessaires.",
             color=COLOR_DANGER
         )
@@ -260,7 +251,7 @@ async def build_config_embed(guild: discord.Guild) -> discord.Embed:
         s = await get_settings(guild.id)
         embed = discord.Embed(title="📊 Configuration Actuelle", color=COLOR_MAIN, timestamp=datetime.now())
         if not s:
-            embed.description = "❌ Aucune configuration trouvée."
+            embed.description = "❌Aucune configuration trouvée❌"
             embed.set_footer(text=BOT_FOOTER)
             return embed
 
@@ -336,7 +327,7 @@ async def build_config_embed(guild: discord.Guild) -> discord.Embed:
         await conn.close()
 
         embed.add_field(
-            name="📋 Statistiques",
+            name="📋Statistiques📋",
             value=(
                 f"**{pending}** signalement(s) en attente\n"
                 f"**{total_warns}** avertissement(s) enregistré(s)\n"
@@ -399,7 +390,7 @@ class ReportVerdictModal(ui.Modal, title="⚖️ Décision de Modération"):
             if isinstance(channel, discord.TextChannel):
                 arch = discord.Embed(color=color_verdict, timestamp=datetime.now())
                 arch.set_author(name=f"Verdict rendu par {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
-                arch.title       = f"📁 Dossier {self.status} — Archivé"
+                arch.title       = f"📁Dossier📁{self.status} — Archivé"
                 arch.description = (
                     f"{sep()}\n**📋 Informations du Dossier**\n"
                     f"┣ 👤 **Signalé par :** <@{self.reporter_id}>\n"
@@ -509,7 +500,7 @@ class ReportControlView(ui.View):
 
         try:
             reporter = await bot.fetch_user(self.reporter_id)
-            notif    = discord.Embed(title="🔔 Signalement en Cours", color=COLOR_INFO)
+            notif    = discord.Embed(title="🔔Signalement en Cours🔔", color=COLOR_INFO)
             notif.description = f"Un modérateur a pris en charge votre signalement.\n**Modérateur :** {interaction.user.mention}"
             notif.set_footer(text=BOT_FOOTER)
             await reporter.send(embed=notif)
@@ -518,12 +509,12 @@ class ReportControlView(ui.View):
 
         embed       = interaction.message.embeds[0]
         embed.color = COLOR_WARNING
-        embed.set_footer(text=f"⚡ Pris en charge par {interaction.user.display_name} • {BOT_FOOTER}")
+        embed.set_footer(text=f"⚡Pris en charge par {interaction.user.display_name} • {BOT_FOOTER}")
         await interaction.response.edit_message(embed=embed, view=ReportDecisionView())
 
 
 def build_report_embed(reporter, target, reason, proof):
-    embed             = discord.Embed(title="📋 Nouveau Signalement", color=COLOR_PURPLE, timestamp=datetime.now())
+    embed             = discord.Embed(title="📋Nouveau Signalement📋", color=COLOR_PURPLE, timestamp=datetime.now())
     embed.description = (
         f"{sep()}\n**👤 Parties Impliquées**\n"
         f"┣ **Lanceur :** {reporter.mention} (`{reporter.name}`)\n"
@@ -1089,7 +1080,7 @@ async def warn(interaction: discord.Interaction, membre: discord.Member, raison:
     total = total_row[0] if total_row else 0
     await conn.close()
 
-    e = discord.Embed(title="⚠️ Avertissement Enregistré", color=COLOR_INFO, timestamp=datetime.now())
+    e = discord.Embed(title="⚠️Avertissement Enregistré⚠️", color=COLOR_INFO, timestamp=datetime.now())
     e.description = (
         f"**{membre.mention}** a reçu un avertissement.\n\n"
         f"**💬 Raison :** {raison}\n"
@@ -1608,16 +1599,6 @@ async def banlist(interaction: discord.Interaction):
     view = BanListView(bans)
     await interaction.followup.send(embed=view.build_embed(), view=view, ephemeral=True)
 
-
-@bot.tree.command(name="dlm", description="Accéder au site DLM Corporation")
-async def dlm(interaction: discord.Interaction):
-    embed = discord.Embed(title="👑 DLM Corporation", description="Accédez au portail officiel de DLM Corporation.", color=COLOR_GOLD)
-    embed.set_footer(text=BOT_FOOTER)
-    view = ui.View()
-    view.add_item(ui.Button(label="Visiter le Site DLM", url="https://dlm-inc.odoo.com", emoji="🌐"))
-    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
-
-
 @bot.tree.command(name="warnlist", description="Voir tous les avertissements enregistrés sur le serveur")
 @app_commands.describe(membre="Filtrer par membre (optionnel)")
 async def warnlist(interaction: discord.Interaction, membre: discord.Member = None):
@@ -1757,14 +1738,6 @@ HELP_CATEGORIES = {
             ("/tiktok action:📋 Liste",             "Voir tous les streamers TikTok et leur statut."),
         ]
     },
-    "🌐 DLM": {
-        "description": "Accès aux ressources officielles DLM Corporation.",
-        "commands": [
-            ("/dlm", "Accéder au portail officiel DLM Corporation."),
-        ]
-    },
-}
-
 
 def build_help_home_embed() -> discord.Embed:
     embed = discord.Embed(title="📚 Aide — DLM Bot", color=COLOR_MAIN, timestamp=datetime.now())
@@ -2238,40 +2211,7 @@ async def tiktok_cmd(interaction: discord.Interaction, action: str, lien: str = 
         )
         count_row = await c2.fetchone()
         count     = count_row[0] if count_row else 0
-
-        if count >= limit:
-            await conn.close()
-            if premium:
-                embed = discord.Embed(
-                    title       = "❌ Limite Premium Atteinte",
-                    description = f"Tu as atteint la limite de **{limit} streamers TikTok** inclus dans le Premium.",
-                    color       = COLOR_DANGER
-                )
-                embed.set_footer(text=BOT_FOOTER)
-                return await interaction.response.send_message(embed=embed, ephemeral=True)
-            else:
-                embed = discord.Embed(
-                    title     = "🔒 Limite Gratuite Atteinte",
-                    color     = COLOR_GOLD,
-                    timestamp = datetime.now()
-                )
-                embed.description = (
-                    f"Tu as atteint la limite de **{limit} streamers TikTok** du plan gratuit.\n\n"
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    f"**👑 DLM Premium — Achat unique à vie 👑**\n\n"
-                    f"✅ Jusqu'à **10 streamers TikTok**\n"
-                    f"✅ Notifications illimitées\n"
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                )
-                embed.set_footer(text=f"Paiement sécurisé via Discord  •  {BOT_FOOTER}")
-                view = discord.ui.View()
-                view.add_item(discord.ui.Button(
-                    label  = "👑 Débloquer Premium 👑",
-                    style  = discord.ButtonStyle.premium,
-                    sku_id = PREMIUM_SKU_ID
-                ))
-                return await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
-
+        
         await conn.execute(
             "INSERT INTO live_streamers (guild_id, platform, username) VALUES (?,?,?)",
             (interaction.guild_id, "tiktok", username)
@@ -2353,7 +2293,7 @@ async def live_check_task():
                 )
                 embed.set_author(
                     name     = "TikTok Live — Notification automatique",
-                    icon_url = "https://cdn-icons-png.flaticon.com/512/3046/3046121.png"
+                    icon_url = 
                 )
                 embed.description = (
                     f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -2387,7 +2327,7 @@ async def live_check_task():
                 )
                 embed_end.set_author(
                     name     = "TikTok Live — Fin de session",
-                    icon_url = "https://cdn-icons-png.flaticon.com/512/3046/3046121.png"
+                    icon_url = 
                 )
                 embed_end.description = (
                     f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -2400,7 +2340,7 @@ async def live_check_task():
                 embed_end.add_field(name="👤 Profil",     value=f"[@{username}]({tiktok_profile})", inline=True)
                 embed_end.set_footer(
                     text     = f"TikTok Live • {BOT_FOOTER}",
-                    icon_url = "https://cdn-icons-png.flaticon.com/512/3046/3046121.png"
+                    icon_url =
                 )
                 try:
                     await notif_chan.send(
@@ -2420,4 +2360,4 @@ async def before_live_check():
     await bot.wait_until_ready()
 
 
-bot.run(config['token'])
+bot.run(config['0000000000000000000000000000000000000000000000'])
